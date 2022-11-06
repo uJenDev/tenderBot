@@ -10,7 +10,7 @@ The code provided in this repository is fully explained
 in the report created by me and my project group. I do not
 recommend using the code outside of your local machine before
 reading said report. I do not take any responsibility for the harm caused
-by robots to any living beings or material things.
+to any living beings or material property as a result of using this code.
 
 # NOTE: 
 Before using you need to create the database using 
