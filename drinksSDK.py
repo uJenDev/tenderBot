@@ -21,8 +21,10 @@ def add_drink(drinkName, portions, buttonLink):
         cursor.execute(sql, new_drink)
         conx.commit()
         print('Drink successfully added')
+        return True
     except sqlite3.Error as error:
         print("Failed to add drink: ", error)
+        return False
     finally:
         conx.close()
 
@@ -61,7 +63,12 @@ def refill_portion(loc, refill_amount, specifier='name'):
 
         sql = f"SELECT portions FROM drinks WHERE {specifier}=?"
         cursor.execute(sql, (loc,))
-        portions = cursor.fetchall()[0][0] + refill_amount
+
+        portions = cursor.fetchall()
+        if portions:
+            portions = portions[0][0] + refill_amount
+        else:
+            return False
         
         sql = f"UPDATE drinks SET portions=? WHERE {specifier}=?"
         cursor.execute(sql, (portions, loc))

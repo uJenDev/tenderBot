@@ -13,7 +13,7 @@ cam_connected = False
 robot_connected = False
 
 
-arduino_port = '/dev/cu.usbmodem21101'
+arduino_port = '/dev/cu.usbmodem212301'
 board = pyfirmata.Arduino(arduino_port)
 
 it = pyfirmata.util.Iterator(board)
@@ -29,7 +29,7 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
  
 host = '192.168.12.90' if robot_connected else '127.0.0.1'
 
-port = 2222 
+port = 2222
 msg = ''
 client.connect((host,port)) #Socket oppkobling 
 command_number = 0

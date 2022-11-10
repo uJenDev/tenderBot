@@ -27,7 +27,7 @@ class Drinks(Base):
 
     id = Column(Integer, primary_key=True)
     buttonLink = Column(Integer)
-    name = Column(String)
+    name = Column(String, unique=True)
     portions = Column(Integer)
     lastUsed = Column(String)
 

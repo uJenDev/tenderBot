@@ -1,0 +1,137 @@
+MODULE Module1
+    CONST robtarget Bottle:=[[700,0,0],[0.707106781,0,0.707106781,0],[0,-3,-3,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    VAR robtarget Glass:=[[700,0,0],[0.707106781,0,0.707106781,0],[0,0,0,1],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    
+    VAR orient orient1 :=[0.707106781,0,0.707106781,0];
+    VAR orient orient2 :=[0,-3,-3,0];
+    
+    VAR num anglex;
+    VAR num angley;
+    VAR num anglez;
+    
+    VAR robtarget CurrentRobT;
+    
+    VAR socketdev server;
+    VAR socketdev client;
+    VAR string Client_IP;
+    VAR string data;
+    
+    VAR num dataXPos;
+    VAR num dataYPos;
+    VAR num dataDrinkNum;
+    
+    VAR num drinkPos;
+    
+    VAR bool ok;
+    
+    PROC main()
+        ConfL\Off;
+        ConfL\Off;
+        SocketCon;
+    ENDPROC
+    
+    PROC ServeClient(num xPos, num yPos, num drinkNum)
+        MoveStart;
+        GetBottle drinkNum;
+        MoveToGlass xPos, yPos;
+        Pouring;
+        ReturnBottle;
+    ENDPROC
+    
+    PROC MoveStart()
+        MoveL Offs(Glass,0,0,600),v300,fine,Gripper_1\WObj:=FetchingWO;
+    ENDPROC
+    
+    
+    PROC GetBottle(num drinkNum)
+        
+        IF drinkNum = 1 THEN
+            drinkPos := -350;
+        ELSEIF drinkNum = 2 THEN
+            drinkPos := -250;
+        ELSEIF drinkNum = 3 THEN
+            drinkPos := -150;
+        ENDIF
+        
+        MoveL RelTool(Glass,-100,100,drinkPos\Rx:=90),v300,fine,Gripper_1\WObj:=FetchingWO;
+        Reset DO10_2;
+        Set DO10_3;
+        MoveL RelTool(Glass,-100,0,drinkPos\Rx:=90),v50,fine,Gripper_1\WObj:=FetchingWO;
+        Set DO10_2;
+        Reset DO10_3;
+        !Set att_bottle;
+        WaitTime(0.5);
+        MoveL RelTool(Glass,-120,0,drinkPos\Rx:=90),v50,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL RelTool(Glass,-120,100,drinkPos\Rx:=90),v50,fine,Gripper_1\WObj:=FetchingWO;
+        MoveC Offs(Glass,-300,-500,200),Offs(Glass,0,0,250),v300,fine,Gripper_1\WObj:=ServingWO;
+    ENDPROC
+    
+    PROC MoveToGlass(num xPos, num yPos)
+        MoveL Offs(Glass,xPos,yPos,250),v500,fine,Gripper_1\WObj:=ServingWO;
+    ENDPROC
+    
+    PROC Pouring()
+        CurrentRobT := CRobT();
+        MoveL Offs(CurrentRobT,0,50,0),v150,fine,Gripper_1\WObj:=ServingWO;
+        MoveL RelTool(CurrentRobT,120,75,0\Rz:=80),v100,fine,Gripper_1\WObj:=ServingWO;
+        MoveL RelTool(CurrentRobT,70,50,0\Rz:=120),v50,fine,Gripper_1\WObj:=ServingWO;
+        WaitTime(0.4);
+        MoveL RelTool(CurrentRobT,120,75,0\Rz:=80),v50,fine,Gripper_1\WObj:=ServingWO;
+        MoveL Offs(CurrentRobT,0,50,0),v150,fine,Gripper_1\WObj:=ServingWO;
+    ENDPROC
+    
+    PROC ReturnBottle()
+        
+        !MoveC Offs(Glass,-250,500,400),Offs(Glass,0,0,400),v300,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL Offs(Glass,-200,400,200),v500,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL RelTool(Glass,-120,100,drinkPos\Rx:=90),v300,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL RelTool(Glass,-120,0,drinkPos\Rx:=90),v50,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL RelTool(Glass,-100,0,drinkPos\Rx:=90),v50,fine,Gripper_1\WObj:=FetchingWO;
+        Reset DO10_2;
+        Set DO10_3;
+        WaitTime(0.5);
+        MoveL RelTool(Glass,-120,0,drinkPos\Rx:=90),v50,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL RelTool(Glass,-100,100,drinkPos\Rx:=90),v300,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL RelTool(Glass,-300,100,drinkPos\Rx:=90),v300,fine,Gripper_1\WObj:=FetchingWO;
+        MoveL Offs(Glass,0,0,600),v300,fine,Gripper_1\WObj:=FetchingWO;
+        
+    ENDPROC
+    
+    PROC SocketCon()
+        
+        SocketCreate server;
+        SocketBind server, "192.168.12.90",2222;
+        SocketListen server;
+        SocketAccept server,client,\ClientAddress:=Client_IP,\Time:=120;
+        TPWrite("Connected to: " + client_IP);
+        WHILE TRUE DO
+            
+                        
+            SocketReceive client \Str:=data;
+            
+            IF data = "done" THEN
+                TPWrite "Thank you. Goodnight!";
+                Break;
+            ENDIF
+            
+            ok := StrToVal( StrPart(data,1,4), dataXPos );
+            ok := StrToVal( StrPart(data,5,8), dataYPos );
+            ok := StrToVal( StrPart(data,9,9), dataDrinkNum );
+            
+            TPWrite "Order Received";
+            TPWrite "Serving Client at X: " + ValToStr(dataXPos) 
+                                            + "   Y: " + ValToStr(dataYPos) 
+                                            + " with drink " + ValToStr(dataDrinkNum);
+            
+            ServeClient dataXPos, dataYPos, dataDrinkNum;
+
+            TPWrite "Order complete.";
+            SocketSend client \Str:="COMPLETE";
+        ENDWHILE
+        
+        SocketClose server;
+        SocketClose client;
+        
+    ENDPROC
+    
+ENDMODULE
