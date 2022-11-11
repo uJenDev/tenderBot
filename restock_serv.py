@@ -3,9 +3,9 @@ from _thread import *
 import drinksSDK
 import pandas as pd
 
-is_local = True
+is_local = False
 
-host = '127.0.0.1' if is_local else '192.168.12.68'
+host = '127.0.0.1' if is_local else '192.168.12.52'
 port = 14000
 
 validOptions = ['1', '2', '3', '4', '5', '6', '7', '8']

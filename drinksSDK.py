@@ -15,6 +15,16 @@ def add_drink(drinkName, portions, buttonLink):
         conx = sqlite3.connect(database_name)
         cursor = conx.cursor()
 
+        sql = f"SELECT id FROM drinks WHERE buttonLink=?"
+        cursor.execute(sql, (buttonLink,))
+        drinkID = cursor.fetchall()
+
+        if drinkID:
+            for ids in drinkID:
+                sql = f"UPDATE drinks SET buttonLink=0 WHERE id=?"
+                cursor.execute(sql, (ids[0], ))
+                conx.commit()
+
         new_drink = (buttonLink, drinkName, portions, date)
         sql = "INSERT INTO drinks (buttonLink, name, portions, lastUsed) VALUES (?, ?, ?, ?)"
 

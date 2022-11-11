@@ -14,10 +14,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             print(f"Connected by {addr}")
             while True:
-                data = conn.recv(1024).decode()
-                if not data or data == b"done":
-                    break
-                x, y = data[:4], data[4:]
+                x = conn.recv(1024).decode()
+                conn.sendall(f"Received: {x}".encode())
+                y = conn.recv(1024).decode()
+                conn.sendall(f"Received: {y}".encode())
+                drinkNum = conn.recv(1024).decode()
+                conn.sendall(f"Received: {drinkNum}".encode())
+
+                print(f'Received x: {x}, y: {y}, drinkNum: {drinkNum}')
+
                 time.sleep(time_to_serve)
                 conn.sendall(b"COMPLETE")
         except Exception as e:

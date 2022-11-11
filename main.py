@@ -13,7 +13,7 @@ cam_connected = False
 robot_connected = False
 
 
-arduino_port = 'COM4'
+arduino_port = '/dev/cu.usbmodem21101'
 board = pyfirmata.Arduino(arduino_port)
 
 it = pyfirmata.util.Iterator(board)
