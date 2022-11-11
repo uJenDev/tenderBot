@@ -4,6 +4,10 @@ import drinksSDK
 import pandas as pd
 
 is_local = True
+
+host = '127.0.0.1' if is_local else '192.168.12.68'
+port = 14000
+
 validOptions = ['1', '2', '3', '4', '5', '6', '7', '8']
 
 def getCurrentDrinks():
@@ -194,8 +198,6 @@ def main():
 
     try:
         ServerSideSocket = socket.socket()
-        host = '127.0.0.1' if is_local else '192.168.1.11'
-        port = 15000
         ThreadCount = 0
 
         try:

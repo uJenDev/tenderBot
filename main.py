@@ -13,7 +13,7 @@ cam_connected = False
 robot_connected = False
 
 
-arduino_port = '/dev/cu.usbmodem212301'
+arduino_port = 'COM4'
 board = pyfirmata.Arduino(arduino_port)
 
 it = pyfirmata.util.Iterator(board)
@@ -33,7 +33,6 @@ port = 2222
 msg = ''
 client.connect((host,port)) #Socket oppkobling 
 command_number = 0
-whiteSpace = '               '
 
 
 
@@ -70,6 +69,7 @@ def main():
         
 
 def handleButtonPush(button, cap):
+    global imgResult
 
     check = checkForPortions(button)
 
@@ -80,24 +80,27 @@ def handleButtonPush(button, cap):
             success, img = cap.read()
             imgRS = cv2.resize(img, (1020, 540))
             imgResult = imgRS.copy()
-            x,y = findCircle(imgRS)
-            serverClient(x, y, button)
-            print(f"REGL: {x} {y}")
-            
-            while True:
-                cv2.imshow("Result", imgResult)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    cv2.destroyAllWindows()
-                    break
+            coordinates = findCircle(imgRS)
+
+            if not coordinates:
+                return
+
+            cv2.imshow("Result", imgResult)
+            cv2.waitKey(1)
+            serverClient(coordinates[0], coordinates[1], button)
+            cv2.destroyAllWindows()
+
+    
         else:
             t1, t2 = input("Enter x and y: ").split(" ")
             serverClient(int(t1), int(t2), button)
+
     else:
         print('We are currently out of this drink. Please select a different option or wait for one of our employees to refill the container.')
 
 def checkForPortions(button):
     
-    status = drinksSDK.decrement_portion(button, 'buttonLink')
+    status = drinksSDK.check_portion(button, 'buttonLink')
 
     if status:
         return True
@@ -114,10 +117,11 @@ def findCircle(img):
         for (x, y, r) in detected_circles[0, :]:
             cv2.circle(imgResult, (x, y), r, (0, 255, 0), 5)
             cv2.circle(imgResult, (x, y), 2, (0, 255, 255), 3)
-  
-            return y,x
+        
+            print(f"Find Circle - x: {x}  y: {y}")
+            return [y,x]
     else:
-        return 0,0
+        return False
 
 def serverClient(x, y, drink_num):
 
@@ -145,19 +149,21 @@ def serverClient(x, y, drink_num):
     else:
         xValue, yValue = str(x), str(y)
 
-    if "-" not in xValue:
-        xValue = "+" + xValue
-    if "-" not in yValue:
-        yValue = "+" + yValue
-
-    xValue = xValue + " " * (4-len(xValue))
-    yValue = yValue + " " * (4-len(yValue))
+    drink_num_str = str(drink_num)
     
     if xValue != "+0" and yValue != "+0":
         
-        msg = f"{xValue}{yValue}{drink_num}" + whiteSpace
+
         try:
-            client.send(bytes(msg,'utf-8'))
+            client.send(bytes(xValue,'utf-8'))
+            print(f"X: {xValue}")
+            client.recv(1024)
+            client.send(bytes(yValue,'utf-8'))
+            print(f"Y: {yValue}")
+            client.recv(1024)
+            client.send(bytes(drink_num_str,'utf-8'))
+            print(f"DRINK: {drink_num_str}")
+            client.recv(1024)
         except ConnectionRefusedError as e:
             print(e)
         
@@ -177,8 +183,10 @@ def catchResponse(drink_num, xValue, yValue):
     
     if response == "COMPLETE":
         customerSDK.add_customer(drink_num, xValue, yValue)
-        print ("CUSTOMER APPENDED TO DATABASE")
+        drinksSDK.decrement_portion(drink_num, "buttonLink")
+        print ("CUSTOMER APPENDED TO DATABASE AND DRINK DECREMENTED")
     print("ORDER COMPLETE")
+    
 
     light.write(0)
 

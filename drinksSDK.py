@@ -55,6 +55,25 @@ def decrement_portion(loc, specifier='name'):
     finally:
         conx.close()
 
+def check_portion(loc, specifier='name'):
+    try:
+        conx = sqlite3.connect(database_name)
+        cursor = conx.cursor()
+
+        sql = f"SELECT portions FROM drinks WHERE {specifier}=?"
+        cursor.execute(sql, (loc,))
+        try:
+            portions = cursor.fetchall()[0][0]
+        except IndexError:
+            return False
+        if portions == 0:
+            return False
+        else:
+            return True
+    except sqlite3.Error as error:
+        print("Something happend: ", error)
+    finally:
+        conx.close()
 
 def refill_portion(loc, refill_amount, specifier='name'):
     try:
